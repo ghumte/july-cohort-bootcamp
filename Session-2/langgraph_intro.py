@@ -32,3 +32,6 @@ graph = builder.compile()
 result = graph.invoke({"messages": [{"role": "user", "content": "Hello, how are you?"}], "counter": 10})
 print(result)
 
+# cd /d C:\Users\ghumt\langchainprojects\july-cohort-bootcamp
+# "C:\Users\ghumt\AppData\Local\Programs\Python\Python311\python.exe" .\Session-2\langgraph_intro.py
+
