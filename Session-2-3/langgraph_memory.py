@@ -45,8 +45,8 @@ print(result)
 result = graph.invoke({"messages": [{"role": "user", "content": "Hi I am Sam"}], "counter": 10}, thread_2)
 print(result)
 
-result = graph.invoke({"messages": [{"role": "user", "content": "who am I?"}], "counter": 10}, thread_2)
-print(result)
+result = graph.invoke({"messages": [{"role": "user", "content": "who am I?"}], "counter": 10}, config=thread_2)
+print(result)# config = {"configurable": {"thread_id": str(uuid.uuid4())}, "callbacks": [langfuse_handler()]}
 
 
 result = graph.invoke({"messages": [{"role": "user", "content": "who am I?"}], "counter": 10}, thread_1)
