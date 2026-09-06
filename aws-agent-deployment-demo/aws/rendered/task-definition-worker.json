@@ -35,11 +35,11 @@
       "secrets": [
         {
           "name": "REDIS_URL",
-          "valueFrom": "arn:aws:secretsmanager:us-east-1:074388197187:secret:aws-agent-deployment-demo/redis-url-SNUNig"
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:074388197187:secret:aws-agent-deployment-demo/redis-url-WFzkKI"
         },
         {
           "name": "OPENAI_API_KEY",
-          "valueFrom": "arn:aws:secretsmanager:us-east-1:074388197187:secret:aws-agent-deployment-demo/openai-api-key-KA1Crj"
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:074388197187:secret:aws-agent-deployment-demo/openai-api-key-T3L3Lq"
         }
       ],
       "logConfiguration": {

@@ -26,7 +26,10 @@ Client → ALB → FastAPI (ECS) → Redis (ElastiCache) → Celery worker (ECS)
 - Docker + Docker Compose
 - Python 3.11+ (for pytest)
 - OpenAI API key
-- AWS CLI configured ([install guide](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html))
+- **AWS CLI v2.32+** configured ([install](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html))
+  - Check: `aws --version` (must be ≥ 2.32 for `aws login`)
+  - Sign in: `aws login` (or `aws login --remote` over SSH)
+  - Verify: `aws sts get-caller-identity`
 - Default VPC with at least 2 subnets in your region
 
 ```bash
@@ -125,6 +128,12 @@ Creates ECR, ECS cluster, ElastiCache Redis, ALB, IAM roles, CloudWatch log grou
 
 ```bash
 ./scripts/deploy_infrastructure.sh
+```
+
+If you see `ResourceExistenceCheck` / named resources already exist:
+
+```bash
+FORCE_CLEAN=1 ./scripts/deploy_infrastructure.sh
 ```
 
 Load stack outputs into your shell (needed by later scripts):
