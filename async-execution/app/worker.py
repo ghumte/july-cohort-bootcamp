@@ -18,6 +18,11 @@ class RetryPolicy:
         return min(self.max_delay_seconds, self.base_delay_seconds * (2 ** max(0, attempts - 1)))
 
 
+def _uses_observability_pipeline(job: JobRecord) -> bool:
+    metadata = dict((job.payload or {}).get("metadata") or {})
+    return metadata.get("pipeline") == "observability" or "obs_scenario" in metadata
+
+
 class Worker:
     def __init__(
         self,
@@ -30,6 +35,13 @@ class Worker:
         self.pipeline = pipeline or AgentPipeline()
         self.retry_policy = retry_policy or RetryPolicy()
 
+    def _pipeline_for(self, job: JobRecord):
+        if _uses_observability_pipeline(job):
+            from app.obs_pipeline import ObservabilityPipeline
+
+            return ObservabilityPipeline()
+        return self.pipeline
+
     def process(self, job_id: str) -> JobRecord:
         job = self.store.get(job_id)
         if job.status == JobStatus.CANCEL_REQUESTED:
@@ -37,13 +49,13 @@ class Worker:
         if job.status not in {JobStatus.QUEUED, JobStatus.RUNNING, JobStatus.RETRYING}:
             return job
 
-        # Move retrying → queued → running if needed.
         if job.status == JobStatus.RETRYING:
             self.store.transition(job_id, JobStatus.QUEUED, event_type="worker.requeued")
         job = self.store.begin_attempt(job_id)
+        pipeline = self._pipeline_for(job)
         prior: dict = {}
         try:
-            for index, step in enumerate(self.pipeline.steps[job.checkpoint_index :], start=job.checkpoint_index):
+            for index, step in enumerate(pipeline.steps[job.checkpoint_index :], start=job.checkpoint_index):
                 job = self.store.get(job_id)
                 if job.cancel_requested or job.status == JobStatus.CANCEL_REQUESTED:
                     return self.store.transition(job_id, JobStatus.CANCELLED, event_type="worker.cancelled")
@@ -52,23 +64,43 @@ class Worker:
                 if existing is not None:
                     output = existing
                 else:
-                    output = self.pipeline.run_step(job, step, prior)
+                    output = pipeline.run_step(job, step, prior)
                     self.store.record_side_effect_once(job_id, step, output)
                 prior[step] = output
                 self.store.save_checkpoint(job_id, index + 1, step)
 
-            final_answer = prior.get("persist", {}).get("answer") or prior.get("execute", {}).get("answer")
+            if _uses_observability_pipeline(job):
+                final = prior.get("support_ops") or {}
+                result = {
+                    "answer": final.get("answer"),
+                    "completed_steps": list(pipeline.steps),
+                    "agent_steps": final.get("agent_steps"),
+                    "provider": final.get("provider"),
+                    "pipeline": "observability",
+                    "scenario": final.get("scenario"),
+                    "grounded": final.get("grounded"),
+                    "business_success": final.get("business_success"),
+                    "validation": final.get("validation"),
+                    "budget_ok": final.get("budget_ok"),
+                    "budget_failures": final.get("budget_failures"),
+                    "estimated_cost_usd": final.get("estimated_cost_usd"),
+                    "tool_calls": final.get("tool_calls"),
+                    "errors": final.get("errors"),
+                }
+            else:
+                final_answer = prior.get("persist", {}).get("answer") or prior.get("execute", {}).get("answer")
+                result = {
+                    "answer": final_answer,
+                    "completed_steps": list(pipeline.steps),
+                    "memory_write": prior.get("persist", {}).get("memory_write"),
+                    "memory_rejected": prior.get("persist", {}).get("memory_rejected"),
+                    "provider": prior.get("execute", {}).get("model"),
+                }
             return self.store.transition(
                 job_id,
                 JobStatus.SUCCEEDED,
                 event_type="worker.succeeded",
-                result={
-                    "answer": final_answer,
-                    "completed_steps": list(self.pipeline.steps),
-                    "memory_write": prior.get("persist", {}).get("memory_write"),
-                    "memory_rejected": prior.get("persist", {}).get("memory_rejected"),
-                    "provider": prior.get("execute", {}).get("model"),
-                },
+                result=result,
             )
         except WorkerLost:
             raise

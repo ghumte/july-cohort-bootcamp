@@ -107,4 +107,5 @@ def root():
         "delivery": "Redis + Celery via transactional outbox",
         "agent": "LangGraph + LangChain ChatOpenAI",
         "memory": "Governed gateway (model proposes, policy decides)",
+        "observability_pipeline": "Set metadata.pipeline=observability and metadata.obs_scenario",
     }
