@@ -33,17 +33,22 @@ Live class demo on real AWS: ECR + ECS Fargate + ElastiCache + ALB + **Secrets M
 ### 1. Prerequisites
 
 - AWS account + CLI configured - [https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+- run the command - aws login
 - Docker
 - **OpenAI API key** (for Secrets Manager — not committed to git)
 
 ### 2. Deploy infrastructure
 
-# run the commands on git bash
-
 ```bash
 export AWS_REGION=us-east-1
 chmod +x scripts/*.sh
 ./scripts/deploy_infrastructure.sh
+```
+
+If deploy fails with `ResourceExistenceCheck`, leftovers from a prior demo exist:
+
+```bash
+FORCE_CLEAN=1 ./scripts/deploy_infrastructure.sh
 ```
 
 ElastiCache takes **5–10 minutes**.
