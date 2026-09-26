@@ -54,43 +54,53 @@ WID='workflow-id-displayed-above'
 docker compose exec -T -e API_URL=http://localhost:8000 api python -m app.cli approve "$WID" --role finance_manager --reason "Checked INR 18000 and specialist evidence"
 ```
 
-## Run a case
+## Run a case Risk Timeout
 
 ```bash
 docker compose exec -T api python -m app.team new risk_timeout
 CID="paste-uuid"
 docker compose exec -T api python -m app.team run "$CID" --backend fixture
 docker compose exec -T api python -m app.team show "$CID"
-```
 
-`conflict` should finish BLOCKED. Do not submit that case.
-
-## Approve
-
-Use a READY case.
-
-```bash
 docker compose exec -T api python -m app.team submit "$CID" --seconds 600
-WID="paste-uuid"
-docker compose exec -T -e API_URL=http://localhost:8000 api python -m app.cli show "$WID"
+
+docker compose exec -T api python -m app.cli show "$WID"
+WID='noted-workflow-id-above'
+#Stop the worker
+docker compose stop worker
+docker ps
+
 docker compose exec -T -e API_URL=http://localhost:8000 api python -m app.cli approve "$WID" --role finance_manager --reason "Checked INR 18000 and specialist evidence"
-docker compose exec -T -e API_URL=http://localhost:8000 api python -m app.cli wait "$WID"
+
+docker compose start worker
+docker compose exec -T api python -m app.cli wait "$WID"
 ```
 
-## Live OpenAI (optional)
-
-Put `OPENAI_API_KEY` in `.env`, then `docker compose up -d`.
+## Run a case scheduler not available
 
 ```bash
-docker compose exec -T api python -m app.team new healthy
+docker compose stop scheduler
+docker compose exec -T api python -m app.team new risk_timeout
 CID="paste-uuid"
-docker compose exec -T api python -m app.team run "$CID" --backend openai --timeout 90
-```
+docker compose exec -T api python -m app.team run "$CID" --backend fixture
+docker compose exec -T api python -m app.team show "$CID"
 
-Keep `--backend fixture` for timeout and conflict drills.
+docker compose exec -T api python -m app.team submit "$CID" --seconds 120 --fault lost_response
 
-## Stop
+docker compose exec -T api python -m app.cli show "$WID"
+WID='noted-workflow-id-above'
+#Stop the worker
+docker compose stop worker
+docker ps
 
-```bash
-docker compose stop
+docker compose exec -T -e API_URL=http://localhost:8000 api python -m app.cli approve "$WID" --role finance_manager --reason "Intentional Late Approval"
+docker compose start scheduler
+docker compose exec -T api python -m app.cli show "$WID"
+
+docker compose exec -T api python -m app.cli approve "$WID" --role finance_director --reason "Escalated review against unchanged specialist-backed proposal"
+
+
+
+docker compose start worker
+docker compose exec -T api python -m app.cli wait "$WID"
 ```
