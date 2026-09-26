@@ -29,8 +29,29 @@ docker compose exec -T db psql -U lab_admin -d enterprise -c '\d coordination_de
 The two gates in `tests/test_labs.py` only check your functions. They do not start a case or call OpenAI.
 
 ```bash
-docker compose exec -T api python -m unittest discover -s tests -p test_labs.py -k test_01 -v
-docker compose exec -T api python -m unittest discover -s tests -p test_labs.py -v
+docker compose exec -T api python -m app.team new healthy
+CID='enter-case-id-from-above'
+docker compose exec -T api python -m app.team run "$CID" --backend fixture
+
+docker compose exec -T db psql -U lab_admin -d enterprise -c "
+SELECT specialist, round_no, status, started_at, due_at
+FROM agent_tasks
+ORDER BY started_at DESC
+LIMIT 8;
+"
+
+
+# Inspect the case
+
+docker compose exec -T api python -m app.team show "$CID"
+
+# Submit for Human approval
+
+docker compose exec -T api python -m app.team submit "$CID" --seconds 600
+
+# Approve 
+WID='workflow-id-displayed-above'
+docker compose exec -T -e API_URL=http://localhost:8000 api python -m app.cli approve "$WID" --role finance_manager --reason "Checked INR 18000 and specialist evidence"
 ```
 
 ## Run a case
