@@ -17,7 +17,12 @@ docker compose exec -T api python -m app.seed
 
 UI: http://localhost:8098
 
-Do not run this stack and the instructor stack on the same ports. This project is `july-sunday-learner`.
+```bash
+docker compose exec -T db psql -U lab_admin -d enterprise -c '\d agent_cases'
+docker compose exec -T db psql -U lab_admin -d enterprise -c '\d agent_tasks'
+docker compose exec -T db psql -U lab_admin -d enterprise -c '\d agent_results'
+docker compose exec -T db psql -U lab_admin -d enterprise -c '\d coordination_decisions'
+```
 
 ## Labs
 
