@@ -1,5 +1,7 @@
 # Learner lab
 
+For a beginning-to-end explanation, see [Workflow Orchestration](WORKFLOW_ORCHESTRATION.md).
+
 One INR 18,000 refund. You own two functions in `app/team_starter.py`.
 
 - `collect_parallel` — start policy, order, and risk together; return `{role: result}`
