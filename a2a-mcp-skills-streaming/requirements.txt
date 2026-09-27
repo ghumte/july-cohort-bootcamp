@@ -1,0 +1,7 @@
+a2a-sdk[http-server]==1.1.5
+mcp[cli]==2.2.0
+streamlit==1.64.0
+openai==3.19.2
+python-dotenv==1.2.3
+pytest==9.1.1
+pytest-asyncio==1.4.0

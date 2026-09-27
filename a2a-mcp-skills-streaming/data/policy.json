@@ -1,0 +1,1 @@
+{"refund_window_days":30,"excluded_categories":["gift_card"],"source":"policy/refunds@v1","description":"Teaching policy: requests within 30 days may proceed for review if the category is eligible and refundable value remains."}
